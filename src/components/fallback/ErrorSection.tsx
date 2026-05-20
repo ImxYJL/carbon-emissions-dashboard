@@ -1,5 +1,7 @@
 'use client';
 
+import { Button } from '../common/Button';
+
 export type ErrorSectionProps = {
   title?: string;
   errorMessage: string;
@@ -35,7 +37,7 @@ const ErrorSection = ({
         </p>
 
         <div className="mt-8 flex w-full flex-col justify-center gap-3">
-          {/* <Button variant="primary" onClick={handleReload} className="p-2.5">
+          <Button onClick={handleReload} className="p-2.5">
             다시 시도
           </Button>
           <Button
@@ -44,7 +46,7 @@ const ErrorSection = ({
             className="p-2.5 border-muted-foreground/40"
           >
             돌아가기
-          </Button> */}
+          </Button>
         </div>
       </div>
     </section>
