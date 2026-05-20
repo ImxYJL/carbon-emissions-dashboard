@@ -1,11 +1,6 @@
 import { CARBON_SOURCE, COUNTRY_BY_CODE } from '@/constant/carbon';
-import {
-  CompanyDto,
-  CountryDto,
-  EmissionFactor,
-  PostDto,
-  RawActivity,
-} from '@/types/carbon';
+import { CompanyDto, CountryDto, PostDto } from '@/types/api';
+import { EmissionFactor, RawActivity } from '@/types/carbon';
 
 // Company.emissions는 RAW_ACTIVITIES와 EMISSION_FACTORS를 기반으로 계산해 주입
 // -> 계산 전 단계의 회사/계열사 기본 정보만 나타내므로 emissions를 제외함

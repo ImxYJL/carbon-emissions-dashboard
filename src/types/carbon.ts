@@ -1,3 +1,5 @@
+// 탄소 계산 도메인에서 공통으로 사용하는 타입
+// Excel 원천 활동 데이터, 배출계수, 계산 완료된 GhgEmission
 import {
   CARBON_SOURCE,
   COUNTRY_BY_CODE,
@@ -5,41 +7,23 @@ import {
   PCF_STAGE,
 } from '@/constant/carbon';
 
-// 원본 데이터 타입
-export type CompanyDto = {
-  id: string;
-  name: string;
-  country: string;
-  emissions: GhgEmissionDto[];
-};
+export type CarbonSourceKey = keyof typeof CARBON_SOURCE;
 
-export type GhgEmissionDto = {
-  yearMonth: string;
-  source: string;
-  emissions: number;
-};
+export type GhgScope = keyof typeof GHG_SCOPE;
 
-export type PostDto = {
-  id: string;
-  title: string;
-  resourceUid: string;
-  dateTime: string;
-  content: string;
-};
+export type PcfLifecycleStage = keyof typeof PCF_STAGE;
 
-// NOTE: 명세에 누락된 타입. 임의로 작성
-export type CountryDto = {
-  code: string;
-  name: string;
-  flag: string;
-};
+export type CountryCode = keyof typeof COUNTRY_BY_CODE;
 
-export type ActivityUnit = 'kWh' | 'kg' | 'ton-km';
+export type ActivityCategory =
+  (typeof CARBON_SOURCE)[CarbonSourceKey]['activityCategory'];
+
+export type ActivityUnit = (typeof CARBON_SOURCE)[CarbonSourceKey]['unit'];
 
 export type EmissionFactor = {
   id: string;
   source: CarbonSourceKey;
-  factor: number; // kgCO₂e per unit
+  factor: number; // kgCO₂e per activity unit
   unit: ActivityUnit;
   scope: GhgScope;
   pcfStage: PcfLifecycleStage;
@@ -51,36 +35,23 @@ export type EmissionFactor = {
 export type RawActivity = {
   id: string;
   companyId: string;
-  date: string;
+  date: string; // YYYY-MM-DD
   activityType: ActivityCategory;
   source: CarbonSourceKey;
   amount: number;
   unit: ActivityUnit;
 };
 
-// 프론트엔드 전용 타입으로 좁힌 도메인 타입
-export type CarbonSourceKey = keyof typeof CARBON_SOURCE;
-
-export type GhgScope = keyof typeof GHG_SCOPE;
-
-export type PcfLifecycleStage = keyof typeof PCF_STAGE;
-
-export type ActivityCategory = 'electricity' | 'material' | 'transport';
-
 export type GhgEmission = {
-  yearMonth: string;
+  id: string;
+  activityId: string;
+  companyId: string;
+  yearMonth: string; // YYYY-MM
   source: CarbonSourceKey;
   emissions: number; // tCO₂e
   scope: GhgScope;
   activityCategory: ActivityCategory;
   pcfStage: PcfLifecycleStage;
-};
-
-export type CountryCode = keyof typeof COUNTRY_BY_CODE;
-
-export type Company = {
-  id: string;
-  name: string;
-  country: string;
-  emissions: GhgEmission[];
+  emissionFactorId: string;
+  emissionFactorVersion: string;
 };
