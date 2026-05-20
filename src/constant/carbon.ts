@@ -1,4 +1,3 @@
-// 배출계수
 export const CARBON_SOURCE = {
   koreaElectricPower: {
     label: '한국전력',
@@ -46,24 +45,25 @@ export const GHG_SCOPE = {
   scope1: {
     label: 'Scope 1',
     koreanLabel: '직접 배출',
-    description: '회사가 소유하거나 통제하는 설비·차량 등에서 직접 발생한 1차 배출입니다.',
+    description:
+      '회사가 소유하거나 통제하는 설비·차량 등에서 직접 발생한 배출입니다. 현재 제공 데이터에는 Scope 1 활동이 포함되어 있지 않습니다.',
     order: 1,
   },
   scope2: {
     label: 'Scope 2',
     koreanLabel: '구매 에너지 간접 배출',
-    description: '구매한 전기, 열, 스팀 사용으로 인해 발생한 2차 간접 배출입니다.',
+    description: '구매한 전기, 열, 스팀 사용으로 인해 발생한 간접 배출입니다.',
     order: 2,
   },
   scope3: {
     label: 'Scope 3',
     koreanLabel: '가치사슬 간접 배출',
-    description: '원소재, 운송 등 회사 가치사슬에서 발생하는 3차 기타 간접 배출입니다.',
+    description: '원소재, 운송 등 회사 가치사슬에서 발생하는 기타 간접 배출입니다.',
     order: 3,
   },
 } as const;
 
-export const PCF_STAGE= {
+export const PCF_STAGE = {
   rawMaterial: {
     label: 'Raw Material',
     koreanLabel: '원재료 단계',
@@ -73,7 +73,7 @@ export const PCF_STAGE= {
   manufacturingEnergy: {
     label: 'Manufacturing Energy',
     koreanLabel: '제조 에너지',
-    description: '제품 제조 과정에서 사용되는 전기 등 에너지 배출입니다.',
+    description: '제품 제조 과정에서 사용되는 전기 등 에너지 사용 배출입니다.',
     order: 2,
   },
   transportDistribution: {

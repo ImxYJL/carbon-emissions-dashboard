@@ -1,4 +1,9 @@
-import { CARBON_SOURCE, COUNTRY_BY_CODE, GHG_SCOPE, PCF_STAGE } from "@/constant/carbon";
+import {
+  CARBON_SOURCE,
+  COUNTRY_BY_CODE,
+  GHG_SCOPE,
+  PCF_STAGE,
+} from '@/constant/carbon';
 
 // 원본 데이터 타입
 export type CompanyDto = {
@@ -27,6 +32,30 @@ export type CountryDto = {
   code: string;
   name: string;
   flag: string;
+};
+
+export type ActivityUnit = 'kWh' | 'kg' | 'ton-km';
+
+export type EmissionFactor = {
+  id: string;
+  source: CarbonSourceKey;
+  factor: number; // kgCO₂e per unit
+  unit: ActivityUnit;
+  scope: GhgScope;
+  pcfStage: PcfLifecycleStage;
+  version: string;
+  validFrom: string;
+  validTo?: string;
+};
+
+export type RawActivity = {
+  id: string;
+  companyId: string;
+  date: string;
+  activityType: ActivityCategory;
+  source: CarbonSourceKey;
+  amount: number;
+  unit: ActivityUnit;
 };
 
 // 프론트엔드 전용 타입으로 좁힌 도메인 타입
