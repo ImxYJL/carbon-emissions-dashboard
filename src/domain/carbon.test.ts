@@ -1,6 +1,10 @@
-import { calculateEmissionFromActivity } from './emission';
-import { EMISSION_FACTORS } from '@/data/seed';
+import {
+  calculateEmissionFromActivity,
+  calculateEmissionsFromActivities,
+} from './emission';
+import { EMISSION_FACTORS, RAW_ACTIVITIES } from '@/data/seed';
 import { describe, expect, it } from '@jest/globals';
+import { getMonthlyScopeChartData } from './dashboard';
 
 describe('calculateEmissionFromActivity', () => {
   it('전기 사용량을 tCO₂e 배출량으로 변환한다', () => {
@@ -77,4 +81,23 @@ it('운송량을 tCO₂e 배출량으로 변환한다', () => {
   });
 
   expect(result.emissions).toBeCloseTo(0.1435, 5);
+});
+
+it('2025-01 월별 Scope 배출량을 집계한다', () => {
+  const emissions = calculateEmissionsFromActivities(
+    RAW_ACTIVITIES,
+    EMISSION_FACTORS,
+  );
+
+  const monthlyScopeData = getMonthlyScopeChartData(emissions);
+  const january = monthlyScopeData.find((item) => item.yearMonth === '2025-01');
+
+  expect(january).toMatchObject({
+    yearMonth: '2025-01',
+  });
+
+  expect(january?.scope1).toBeCloseTo(0, 5);
+  expect(january?.scope2).toBeCloseTo(0.05016, 5);
+  expect(january?.scope3).toBeCloseTo(0.6725, 5);
+  expect(january?.total).toBeCloseTo(0.72266, 5);
 });
