@@ -30,7 +30,9 @@ const PcfBreakdownChart = ({ data }: PcfBreakdownChartProps) => {
   return (
     <Card className="h-full">
       <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold">PCF 단계별 배출량</CardTitle>
+        <CardTitle className="text-base font-semibold">
+          PCF 단계별 누적 배출량
+        </CardTitle>
         <p className="text-xs text-muted-foreground">
           제품 탄소발자국을 구성하는 주요 활동 단계를 원재료, 제조 에너지,
           운송·유통으로 나누어 누적 배출량을 보여줍니다.

@@ -37,9 +37,8 @@ const MonthlyEmissionsChart = ({ data }: MonthlyEmissionsChartProps) => {
           월별 GHG Scope 배출량
         </CardTitle>
         <p className="text-xs text-muted-foreground">
-          월별 배출량을 Scope 1, Scope 2, Scope 3 기준으로 나누어 보여줍니다. 배출이
-          회사의 직접 활동, 구매 에너지, 가치사슬 중 어디에서 발생했는지 확인할 수
-          있습니다.
+          배출이 회사의 직접 활동, 구매 에너지, 가치사슬 중 어디에서 발생했는지
+          확인할 수 있습니다.
         </p>
       </CardHeader>
 
@@ -123,7 +122,7 @@ const MonthlyEmissionsChart = ({ data }: MonthlyEmissionsChartProps) => {
           </ResponsiveContainer>
         </div>
 
-        <div className="mt-3 border-t border-border pt-3">
+        <div className="mt-3 border-t border-border pt-3 flex-col gap-6">
           <div className="flex items-start gap-2 text-xs text-muted-foreground">
             <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
             <p>
@@ -131,6 +130,11 @@ const MonthlyEmissionsChart = ({ data }: MonthlyEmissionsChartProps) => {
               전기 등 에너지 사용에 따른 간접 배출, <strong>Scope 3</strong>는
               원소재·운송 등 가치사슬에서 발생하는 기타 간접 배출입니다.
             </p>
+          </div>
+
+          <div className="flex items-start gap-2 text-xs text-muted-foreground">
+            <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            <p>제공된 모든 활동 데이터의 월별 배출량을 표시합니다.</p>
           </div>
         </div>
       </CardContent>
