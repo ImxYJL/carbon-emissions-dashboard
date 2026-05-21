@@ -11,6 +11,7 @@ export const CARBON_SOURCE = {
     pcfStage: 'manufacturingEnergy',
     factor: 0.456,
     unit: 'kWh',
+    version: '2025-v1',
     description: '구매 전력 사용으로 인한 간접 배출입니다.',
   },
   plastic1: {
@@ -21,6 +22,7 @@ export const CARBON_SOURCE = {
     pcfStage: 'rawMaterial',
     factor: 2.3,
     unit: 'kg',
+    version: '2025-v1',
     description: '구매 원소재의 생산 과정에서 발생한 가치사슬 배출입니다.',
   },
   plastic2: {
@@ -31,6 +33,7 @@ export const CARBON_SOURCE = {
     pcfStage: 'rawMaterial',
     factor: 3.2,
     unit: 'kg',
+    version: '2025-v1',
     description: '구매 원소재의 생산 과정에서 발생한 가치사슬 배출입니다.',
   },
   truck: {
@@ -41,6 +44,7 @@ export const CARBON_SOURCE = {
     pcfStage: 'transportDistribution',
     factor: 3.5,
     unit: 'ton-km',
+    version: '2025-v1',
     description: '운송 및 유통 과정에서 발생한 가치사슬 배출입니다.',
   },
 } as const;

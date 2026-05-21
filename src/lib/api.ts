@@ -41,18 +41,6 @@ export async function fetchPosts() {
   return _posts;
 }
 
-export async function createOrUpdatePost(p: Omit<PostDto, 'id'> & { id?: string }) {
-  await delay(jitter());
-  if (maybeFail()) throw new Error('Save failed');
-  if (p.id) {
-    _posts = _posts.map((x) => (x.id === p.id ? (p as PostDto) : x));
-    return p as PostDto;
-  }
-  const created = { ...p, id: crypto.randomUUID() };
-  _posts = [..._posts, created];
-  return created;
-}
-
 export async function createActivity(input: Omit<RawActivity, 'id'>) {
   await delay(jitter());
 
@@ -82,4 +70,37 @@ export async function createActivity(input: Omit<RawActivity, 'id'>) {
   );
 
   return createdActivity;
+}
+
+export async function createOrUpdatePost(
+  input: Omit<PostDto, 'id'> & { id?: string },
+) {
+  await delay(jitter());
+
+  if (maybeFail()) {
+    throw new Error('Save failed');
+  }
+
+  if (input.id) {
+    const updatedPost: PostDto = {
+      id: input.id,
+      title: input.title,
+      resourceUid: input.resourceUid,
+      dateTime: input.dateTime,
+      content: input.content,
+    };
+
+    _posts = _posts.map((post) => (post.id === updatedPost.id ? updatedPost : post));
+
+    return updatedPost;
+  }
+
+  const createdPost: PostDto = {
+    ...input,
+    id: crypto.randomUUID(),
+  };
+
+  _posts = [createdPost, ..._posts];
+
+  return createdPost;
 }
