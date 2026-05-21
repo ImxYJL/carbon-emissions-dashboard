@@ -57,6 +57,12 @@ const DashboardTopBar = ({
           산정 메모 추가
         </Button>
       </div>
+
+      <div className="mt-3 rounded-xl border bg-muted/40 px-4 py-3 text-xs text-muted-foreground">
+        현재 대시보드는 하나의 고객 그룹에 속한 전체 회사/계열사 데이터를 합산해
+        보여줍니다. KPI와 차트는 그룹 전체 기준이며, 회사별 데이터는 회사/계열사 요약
+        표에서 비교할 수 있습니다.
+      </div>
     </div>
   );
 };
