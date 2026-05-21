@@ -1,5 +1,5 @@
 import React from 'react';
-import { PCF_STAGE } from '@/constant/carbon';
+import { DISPLAY_UNIT, PCF_STAGE } from '@/constant/carbon';
 import type { DashboardKpis } from '@/types/dashboard';
 import KpiCard from './KpiCard';
 
@@ -21,8 +21,8 @@ const KpiSection = ({ kpis }: KpiSectionProps) => {
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <KpiCard
         title="기준 월 배출량"
-        value={`${kpis.monthlyEmissions.toFixed(3)} tCO₂e`}
-        subtitle={`누적: ${kpis.totalEmissions.toFixed(3)} tCO₂e`}
+        value={`${kpis.monthlyEmissions.toFixed(3)} ${DISPLAY_UNIT.emissions}`}
+        subtitle={`누적: ${kpis.totalEmissions.toFixed(3)} ${DISPLAY_UNIT.emissions}`}
         highlighted
         description={`${kpis.reportingMonth} 기준 전체 배출량입니다.`}
       />

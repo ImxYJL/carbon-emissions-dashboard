@@ -1,3 +1,7 @@
+export const DISPLAY_UNIT = {
+  emissions: 'tCO₂e',
+} as const;
+
 export const CARBON_SOURCE = {
   koreaElectricPower: {
     label: '한국전력',
@@ -44,6 +48,7 @@ export const CARBON_SOURCE = {
 export const GHG_SCOPE = {
   scope1: {
     label: 'Scope 1',
+    shortLabel: '1',
     koreanLabel: '직접 배출',
     description:
       '회사가 소유하거나 통제하는 설비·차량 등에서 직접 발생한 배출입니다. 현재 제공 데이터에는 Scope 1 활동이 포함되어 있지 않습니다.',
@@ -51,12 +56,14 @@ export const GHG_SCOPE = {
   },
   scope2: {
     label: 'Scope 2',
+    shortLabel: '2',
     koreanLabel: '구매 에너지 간접 배출',
     description: '구매한 전기, 열, 스팀 사용으로 인해 발생한 간접 배출입니다.',
     order: 2,
   },
   scope3: {
     label: 'Scope 3',
+    shortLabel: '3',
     koreanLabel: '가치사슬 간접 배출',
     description: '원소재, 운송 등 회사 가치사슬에서 발생하는 기타 간접 배출입니다.',
     order: 3,

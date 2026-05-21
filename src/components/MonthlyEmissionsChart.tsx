@@ -13,6 +13,7 @@ import {
 } from 'recharts';
 import type { MonthlyScopeChartItem } from '@/types/dashboard';
 import { Card, CardContent, CardHeader, CardTitle } from './common/Card';
+import { DISPLAY_UNIT } from '@/constant/carbon';
 
 type MonthlyEmissionsChartProps = {
   data: MonthlyScopeChartItem[];
@@ -80,7 +81,7 @@ const MonthlyEmissionsChart = ({ data }: MonthlyEmissionsChartProps) => {
                   const emissions =
                     typeof value === 'number' ? value.toFixed(3) : '0.000';
 
-                  return [`${emissions} tCO₂e`, name];
+                  return [`${emissions} ${DISPLAY_UNIT.emissions}`, name];
                 }}
                 labelFormatter={(_, payload) => {
                   const yearMonth = payload?.[0]?.payload?.yearMonth;

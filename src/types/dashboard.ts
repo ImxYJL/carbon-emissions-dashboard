@@ -1,4 +1,4 @@
-import type { PcfLifecycleStage } from './carbon';
+import type { GhgScope, PcfLifecycleStage } from './carbon';
 import type { CompanyDto } from './api';
 
 export type MonthlyScopeChartItem = {
@@ -21,7 +21,7 @@ export type CompanySummaryRow = {
   country: CompanyDto['country'];
   totalEmissions: number;
   reportingMonthEmissions: number;
-  scope3Share: number;
+  dominantScope: GhgScope | null;
   topPcfStage: PcfLifecycleStage | null;
   estimatedTax: number;
   momChangeRate: number | null;
@@ -40,6 +40,9 @@ export type DashboardKpis = {
 export type CarbonAccountingInsight = {
   title: string;
   description: string;
+  keyLabel: string;
+  value?: string;
+  basis?: string;
 };
 
 export type DashboardData = {

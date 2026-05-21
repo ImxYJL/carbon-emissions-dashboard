@@ -1,6 +1,7 @@
-import { CompanyDto } from '@/types/api';
-import { GhgEmission, GhgScope, PcfLifecycleStage } from '@/types/carbon';
-import {
+import { GHG_SCOPE, PCF_STAGE } from '@/constant/carbon';
+import type { CompanyDto } from '@/types/api';
+import type { GhgEmission, GhgScope, PcfLifecycleStage } from '@/types/carbon';
+import type {
   CarbonAccountingInsight,
   CompanySummaryRow,
   DashboardData,
@@ -8,6 +9,18 @@ import {
   MonthlyScopeChartItem,
   PcfStageChartItem,
 } from '@/types/dashboard';
+
+const GHG_SCOPES: GhgScope[] = ['scope1', 'scope2', 'scope3'];
+
+const PCF_STAGES: PcfLifecycleStage[] = [
+  'rawMaterial',
+  'manufacturingEnergy',
+  'transportDistribution',
+];
+
+type ScopeTotals = Record<GhgScope, number>;
+
+type PcfStageTotals = Record<PcfLifecycleStage, number>;
 
 /**
  * 여러 회사의 emissions를 하나의 배열로 펼친다.
@@ -100,14 +113,14 @@ export function calculateMoMChangeRate(
 /**
  * Scope별 합계.
  */
-export function getScopeTotals(emissions: GhgEmission[]): Record<GhgScope, number> {
-  const initialTotals: Record<GhgScope, number> = {
+export function getScopeTotals(emissions: GhgEmission[]): ScopeTotals {
+  const initialTotals: ScopeTotals = {
     scope1: 0,
     scope2: 0,
     scope3: 0,
   };
 
-  return emissions.reduce<Record<GhgScope, number>>((acc, emission) => {
+  return emissions.reduce<ScopeTotals>((acc, emission) => {
     acc[emission.scope] = roundMetric(acc[emission.scope] + emission.emissions);
     return acc;
   }, initialTotals);
@@ -116,21 +129,32 @@ export function getScopeTotals(emissions: GhgEmission[]): Record<GhgScope, numbe
 /**
  * PCF 단계별 합계.
  */
-export function getPcfStageTotals(
-  emissions: GhgEmission[],
-): Record<PcfLifecycleStage, number> {
-  const initialTotals: Record<PcfLifecycleStage, number> = {
+export function getPcfStageTotals(emissions: GhgEmission[]): PcfStageTotals {
+  const initialTotals: PcfStageTotals = {
     rawMaterial: 0,
     manufacturingEnergy: 0,
     transportDistribution: 0,
   };
 
-  return emissions.reduce<Record<PcfLifecycleStage, number>>((acc, emission) => {
+  return emissions.reduce<PcfStageTotals>((acc, emission) => {
     acc[emission.pcfStage] = roundMetric(
       acc[emission.pcfStage] + emission.emissions,
     );
     return acc;
   }, initialTotals);
+}
+
+/**
+ * 가장 배출량이 큰 Scope를 찾는다.
+ */
+export function getDominantScope(scopeTotals: ScopeTotals): GhgScope | null {
+  const dominantScope = GHG_SCOPES.reduce<GhgScope>((currentDominant, scope) => {
+    return scopeTotals[scope] > scopeTotals[currentDominant]
+      ? scope
+      : currentDominant;
+  }, 'scope1');
+
+  return scopeTotals[dominantScope] === 0 ? null : dominantScope;
 }
 
 /**
@@ -143,15 +167,13 @@ export function getTopPcfStage(emissions: GhgEmission[]): PcfLifecycleStage | nu
 
   const stageTotals = getPcfStageTotals(emissions);
 
-  const [topStage, topValue] = Object.entries(stageTotals).sort(
-    ([, valueA], [, valueB]) => valueB - valueA,
-  )[0] as [PcfLifecycleStage, number];
+  const topStage = PCF_STAGES.reduce<PcfLifecycleStage>((currentTopStage, stage) => {
+    return stageTotals[stage] > stageTotals[currentTopStage]
+      ? stage
+      : currentTopStage;
+  }, 'rawMaterial');
 
-  if (topValue === 0) {
-    return null;
-  }
-
-  return topStage;
+  return stageTotals[topStage] === 0 ? null : topStage;
 }
 
 /**
@@ -192,16 +214,25 @@ export function getMonthlyScopeChartData(
 
 /**
  * PCF 단계별 가로 막대 차트용 데이터.
+ *
+ * 전체 회사/계열사의 전체 기간 누적 배출량을 PCF 단계별로 집계한다.
  */
 export function getPcfStageChartData(emissions: GhgEmission[]): PcfStageChartItem[] {
   const totalEmissions = sumEmissions(emissions);
   const stageTotals = getPcfStageTotals(emissions);
 
-  return Object.entries(stageTotals).map(([stage, value]) => ({
-    stage: stage as PcfLifecycleStage,
-    emissions: roundMetric(value),
-    share: totalEmissions === 0 ? 0 : roundMetric((value / totalEmissions) * 100, 2),
-  }));
+  return PCF_STAGES.map((stage) => {
+    const emissionsByStage = roundMetric(stageTotals[stage]);
+
+    return {
+      stage,
+      emissions: emissionsByStage,
+      share:
+        totalEmissions === 0
+          ? 0
+          : roundMetric((emissionsByStage / totalEmissions) * 100, 2),
+    };
+  });
 }
 
 /**
@@ -226,11 +257,7 @@ export function getCompanySummaryRows(
     );
 
     const scopeTotals = getScopeTotals(company.emissions);
-
-    const scope3Share =
-      totalEmissions === 0
-        ? 0
-        : roundMetric((scopeTotals.scope3 / totalEmissions) * 100, 2);
+    const dominantScope = getDominantScope(scopeTotals);
 
     return {
       companyId: company.id,
@@ -238,7 +265,7 @@ export function getCompanySummaryRows(
       country: company.country,
       totalEmissions,
       reportingMonthEmissions,
-      scope3Share,
+      dominantScope,
       topPcfStage: getTopPcfStage(company.emissions),
       estimatedTax: roundMetric(totalEmissions * taxRate, 2),
       momChangeRate: calculateMoMChangeRate(
@@ -287,6 +314,9 @@ export function getDashboardKpis(
 
 /**
  * 인사이트 카드용 문장 데이터.
+ *
+ * 인사이트의 문장 템플릿은 고정되어 있지만,
+ * 표시되는 Scope, PCF 단계, 변화율, 회사명, 세금은 모두 계산 결과에서 파생한다.
  */
 export function getCarbonAccountingInsights(
   companies: CompanyDto[],
@@ -296,56 +326,75 @@ export function getCarbonAccountingInsights(
   const allEmissions = getAllEmissions(companies);
   const scopeTotals = getScopeTotals(allEmissions);
   const totalEmissions = sumEmissions(allEmissions);
+  const dominantScope = getDominantScope(scopeTotals);
+
   const pcfStageChartData = getPcfStageChartData(allEmissions);
+  const lifecycleHotspot = [...pcfStageChartData].sort(
+    (a, b) => b.emissions - a.emissions,
+  )[0];
+
   const companySummaryRows = getCompanySummaryRows(
     companies,
     taxRate,
     reportingMonth,
   );
 
-  const scope3Share =
-    totalEmissions === 0
-      ? 0
-      : roundMetric((scopeTotals.scope3 / totalEmissions) * 100, 2);
-
-  const lifecycleHotspot = [...pcfStageChartData].sort(
-    (a, b) => b.emissions - a.emissions,
-  )[0];
-
   const highestTaxCompany = [...companySummaryRows].sort(
     (a, b) => b.estimatedTax - a.estimatedTax,
   )[0];
 
-  const kpis = getDashboardKpis(companies, taxRate, reportingMonth);
+  const highestReportingMonthCompany = [...companySummaryRows].sort(
+    (a, b) => b.reportingMonthEmissions - a.reportingMonthEmissions,
+  )[0];
 
-  const insights: CarbonAccountingInsight[] = [
-    {
-      title: 'Scope 3 집중 구간',
-      description: `누적 배출량의 ${scope3Share}%가 원소재·운송 등 가치사슬 배출에서 발생했습니다.`,
-    },
-  ];
+  const insights: CarbonAccountingInsight[] = [];
 
-  if (lifecycleHotspot) {
+  if (dominantScope) {
+    const dominantScopeShare =
+      totalEmissions === 0
+        ? 0
+        : roundMetric((scopeTotals[dominantScope] / totalEmissions) * 100, 2);
+
     insights.push({
-      title: '주요 PCF 배출 단계',
-      description: `${lifecycleHotspot.stage} 단계가 전체 배출량의 ${lifecycleHotspot.share}%를 차지합니다.`,
+      title: '주요 GHG Scope',
+      keyLabel: GHG_SCOPE[dominantScope].label,
+      description: `전체 누적 배출량에서 ${GHG_SCOPE[dominantScope].label}가 가장 큰 비중을 차지합니다.`,
+      value: `${dominantScopeShare}%`,
+      basis: 'Scope별 누적 배출량 / 전체 누적 배출량',
     });
   }
 
-  if (kpis.momChangeRate !== null) {
+  if (lifecycleHotspot && lifecycleHotspot.emissions > 0) {
+    const stageLabel = PCF_STAGE[lifecycleHotspot.stage].koreanLabel;
+
     insights.push({
-      title: '배출량 변화 알림',
-      description: `${reportingMonth} 배출량은 직전 월 대비 ${kpis.momChangeRate}% 변화했습니다.`,
+      title: '주요 PCF 배출 단계',
+      keyLabel: stageLabel,
+      description: `${stageLabel}가 전체 PCF 단계 중 가장 큰 배출 비중을 차지합니다.`,
+      value: `${lifecycleHotspot.share}%`,
+      basis: 'PCF 단계별 누적 배출량 / 전체 누적 배출량',
+    });
+  }
+
+  if (highestReportingMonthCompany) {
+    insights.push({
+      title: '기준 월 주요 배출 계열사',
+      keyLabel: highestReportingMonthCompany.companyName,
+      description: `${reportingMonth} 기준 ${highestReportingMonthCompany.companyName}의 배출량이 가장 큽니다.`,
+      value: `${highestReportingMonthCompany.reportingMonthEmissions.toFixed(3)} tCO₂e`,
+      basis: '회사별 기준 월 배출량 비교',
     });
   }
 
   if (highestTaxCompany) {
     insights.push({
       title: '최대 탄소세 부담',
+      keyLabel: highestTaxCompany.companyName,
       description: `${highestTaxCompany.companyName}의 누적 예상 탄소세가 가장 큽니다.`,
+      value: `$${highestTaxCompany.estimatedTax.toFixed(2)}`,
+      basis: '회사별 누적 배출량 × 탄소세율',
     });
   }
-
   return insights;
 }
 

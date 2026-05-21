@@ -10,7 +10,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { PCF_STAGE } from '@/constant/carbon';
+import { DISPLAY_UNIT, PCF_STAGE } from '@/constant/carbon';
 import type { PcfStageChartItem } from '@/types/dashboard';
 import { Card, CardContent, CardHeader, CardTitle } from './common/Card';
 
@@ -76,7 +76,10 @@ const PcfBreakdownChart = ({ data }: PcfBreakdownChartProps) => {
                     typeof value === 'number' ? value.toFixed(3) : '0.000';
                   const share = props.payload?.share ?? 0;
 
-                  return [`${emissions} tCO₂e (${share}%)`, '배출량'];
+                  return [
+                    `${emissions} ${DISPLAY_UNIT.emissions} (${share}%)`,
+                    '배출량',
+                  ];
                 }}
                 labelFormatter={(label) => `${label}`}
               />

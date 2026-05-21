@@ -2,6 +2,7 @@ import { FileText, Plus } from 'lucide-react';
 import SectionHeader from './common/SectionHeader';
 import { Badge } from './common/Badge';
 import { Button } from './common/Button';
+import { DISPLAY_UNIT } from '@/constant/carbon';
 
 type DashboardTopBarProps = {
   reportingMonth: string;
@@ -32,7 +33,9 @@ const DashboardTopBar = ({
 
         <Badge variant="secondary" className="px-3 py-1.5 text-sm">
           <span className="font-normal text-muted-foreground">탄소세율:</span>
-          <span className="ml-1 font-semibold">${taxRate} / tCO₂e</span>
+          <span className="ml-1 font-semibold">
+            ${taxRate} / ${DISPLAY_UNIT.emissions}
+          </span>
         </Badge>
 
         <div className="flex-1" />
