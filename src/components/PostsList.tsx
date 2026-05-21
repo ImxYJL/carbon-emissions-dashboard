@@ -1,6 +1,5 @@
 'use client';
 
-import { FileText } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from './common/Card';
 import type { CompanyDto, PostDto } from '@/types/api';
 
@@ -59,22 +58,18 @@ const PostsList = ({ posts, companies, reportingMonth }: PostsListProps) => {
               </p>
             )}
 
-            <div className="space-y-3">
+            <ul className="divide-y divide-border/40">
               {sortedPosts.map((post) => (
-                <div
+                <li
                   key={post.id}
-                  className="flex gap-3 rounded-lg bg-muted/50 p-3 transition-colors hover:bg-muted"
+                  className="flex gap-3 py-3 transition-colors hover:bg-muted/30 px-1"
                 >
-                  <div className="mt-0.5">
-                    <FileText className="h-4 w-4 text-muted-foreground" />
-                  </div>
-
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-muted-foreground">
                         {post.dateTime}
                       </span>
-                      <span className="text-xs text-muted-foreground">·</span>
+                      <span className="text-xs text-muted-foreground/40">|</span>
                       <span className="text-xs text-muted-foreground">
                         {getCompanyName(post.resourceUid)}
                       </span>
@@ -85,9 +80,9 @@ const PostsList = ({ posts, companies, reportingMonth }: PostsListProps) => {
                       {post.content}
                     </p>
                   </div>
-                </div>
+                </li>
               ))}
-            </div>
+            </ul>
           </>
         )}
       </CardContent>
