@@ -1,36 +1,295 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Carbon / PCF Emissions Dashboard
 
-## Getting Started
+기업 고객의 전기·원소재·운송 활동 데이터를 기반으로 탄소 배출량을 계산하고, GHG Scope와 PCF lifecycle 관점에서 시각화하는 웹 기반 대시보드입니다.
 
-First, run the development server:
+본 프로젝트는 과제용 데이터를 활용해 경영진과 실무자가 전체 배출량, 예상 탄소세, Scope별 배출 구조, PCF 단계별 배출 구조, 회사/계열사별 차이를 빠르게 확인할 수 있도록 구성한 MVP입니다.
+
+---
+
+## 실행 방법
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+브라우저에서 아래 주소로 접속합니다.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```txt
+http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+테스트 실행은 아래 명령어를 사용합니다.
 
-## Learn More
+```bash
+npm test
+```
 
-To learn more about Next.js, take a look at the following resources:
+배출량 계산 검증 테스트는 전기, 원소재, 운송 대표 케이스와 2025-01 월별 Scope 집계 결과를 확인합니다.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 주요 기능
 
-## Deploy on Vercel
+- 전체 회사/계열사 기준 KPI 요약을 제공합니다.
+- 월별 GHG Scope 배출량을 누적 막대 차트로 제공합니다.
+- 전체 기간 누적 PCF 단계별 배출량을 막대 차트로 제공합니다.
+- 회사/계열사별 누적 배출량, 기준 월 배출량, 최다 배출 Scope, 주요 PCF 단계, 예상 탄소세를 비교합니다.
+- 계산된 데이터를 기반으로 주요 Scope, 주요 PCF 단계, 기준 월 주요 배출 계열사, 최대 탄소세 부담 계열사를 인사이트 카드로 제공합니다.
+- 활동 데이터 추가 폼에서 배출원 선택 시 단위, 배출계수, GHG Scope, PCF 단계, 예상 배출량을 미리 보여줍니다.
+- 산정 메모를 회사와 기준 월에 연결해 관리할 수 있습니다.
+- fake API는 네트워크 지연과 실패 가능성을 포함해 실제 비동기 요청 흐름을 일부 시뮬레이션합니다.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 대시보드 기준
+
+현재 대시보드는 하나의 고객 그룹에 속한 전체 회사/계열사 데이터를 합산해 보여줍니다.
+
+상단 KPI, 월별 Scope 차트, PCF 단계별 차트, 탄소 회계 인사이트는 그룹 전체 기준입니다. 회사별 차이는 회사/계열사 요약 표에서 비교할 수 있도록 구성했습니다.
+
+이 구조는 경영진이 그룹 전체의 배출 규모와 예상 탄소세 노출을 먼저 파악하고, 이후 어떤 계열사가 주요 배출 원인인지 확인하는 흐름을 의도한 것입니다.
+
+---
+
+## 데이터 모델 가공 및 가정
+
+과제 문서의 `Company` / `GhgEmission` 모델은 회사별 월간 배출량 데이터를 표현하는 최종 대시보드 모델로 해석했습니다.
+
+다만 제공된 seed 예시에는 `GhgEmission.source` 필드가 누락되어 있었고, 별도로 제공된 Excel 데이터는 이미 계산된 `GhgEmission`이 아니라 일자, 활동 유형, 설명, 사용량, 단위로 구성된 원천 활동 데이터에 가까웠습니다.
+
+따라서 본 MVP에서는 문서의 seed 예시를 그대로 사용하기보다, 타입 정의와 Excel 원본 활동 데이터를 기준으로 다음과 같이 데이터를 가공했습니다.
+
+```txt
+RawActivity
++ EmissionFactor
+→ GhgEmission
+→ Company.emissions
+```
+
+구체적인 역할은 다음과 같습니다.
+
+- `Company`는 회사/계열사 기본 정보를 나타냅니다.
+- Excel의 각 행은 `RawActivity`로 타입화했습니다.
+- 배출계수는 `EmissionFactor`로 분리했습니다.
+- `RawActivity × EmissionFactor` 계산 결과를 `GhgEmission`으로 변환했습니다.
+- 변환된 `GhgEmission`을 각 `Company.emissions`에 연결했습니다.
+
+---
+
+## 회사/계열사 데이터 가정
+
+과제 설명에서 `companies and affiliates`라는 표현이 반복되므로, 이 대시보드는 하나의 고객 기업이 본사 및 계열사/지사 단위의 배출 현황을 함께 확인하는 용도라고 해석했습니다.
+
+제공된 Excel 원본 활동 데이터에는 회사 또는 계열사 식별자(`companyId`)가 포함되어 있지 않았습니다. 따라서 과제의 회사/계열사 요구사항을 반영하면서도 GHG Scope와 PCF 단계별 해석이 명확하게 드러나도록, 원본 활동 데이터를 하나의 고객 그룹에 속한 기능별 계열사에 매핑했습니다.
+
+- 전기 사용량은 제조 사업장인 `Acme Manufacturing KR`에 배정했습니다.
+- 원소재 사용량은 소재 계열사인 `Acme Materials DE`에 배정했습니다.
+- 운송량은 물류 계열사인 `Acme Logistics US`에 배정했습니다.
+
+이 매핑은 실제 조직 구조를 정확히 재현하기 위한 것이 아니라, 제공된 데이터를 기반으로 회사/계열사별 비교가 가능한 대시보드를 구성하기 위한 MVP 가정입니다.
+
+---
+
+## GHG Scope 및 PCF 반영 방식
+
+배출원별로 GHG Scope와 PCF lifecycle stage를 매핑했습니다.
+
+- 전기 사용량은 구매 에너지 사용에 따른 간접 배출로 보고 `Scope 2`, `Manufacturing Energy`에 매핑했습니다.
+- 원소재 사용량은 가치사슬에서 발생하는 배출로 보고 `Scope 3`, `Raw Material`에 매핑했습니다.
+- 운송량은 가치사슬의 운송·유통 과정에서 발생하는 배출로 보고 `Scope 3`, `Transport / Distribution`에 매핑했습니다.
+
+회사/계열사 요약 표에서는 특정 Scope에 고정하지 않고, 각 회사의 누적 배출량 중 가장 큰 비중을 차지하는 `최다 배출 Scope`를 보여줍니다. 이를 통해 제조, 소재, 물류 등 회사 성격에 따라 주요 관리 대상이 달라질 수 있도록 설계했습니다.
+
+---
+
+## 배출량 계산식
+
+배출량은 제공된 배출계수를 기준으로 계산했습니다.
+
+```txt
+사용량 × 배출계수 = kgCO₂e
+kgCO₂e / 1000 = tCO₂e
+```
+
+예시는 다음과 같습니다.
+
+```txt
+전기 110 kWh × 0.456 / 1000 = 0.05016 tCO₂e
+플라스틱 1 230 kg × 2.3 / 1000 = 0.529 tCO₂e
+트럭 41 ton-km × 3.5 / 1000 = 0.1435 tCO₂e
+```
+
+계산된 배출량은 `tCO₂e` 단위로 대시보드에 표시됩니다.
+
+---
+
+## 프론트엔드와 fake API의 책임 경계
+
+산정 계산은 백엔드 성격의 fake API에서 수행하고, 대시보드 집계와 시각화용 파생 데이터는 프론트엔드에서 수행하도록 분리했습니다.
+
+```txt
+fake API
+RawActivity → GhgEmission 산정
+
+frontend dashboard
+GhgEmission → DashboardData 집계
+```
+
+fake API는 in-memory backend처럼 동작합니다. 원천 활동 데이터와 배출계수를 보관하고, 도메인 계산 함수를 사용해 과제의 `Company.emissions` 모델에 맞는 계산 완료 데이터를 반환합니다.
+
+프론트엔드는 계산 완료된 `Company.emissions`를 기반으로 다음 데이터를 파생합니다.
+
+```txt
+Monthly GHG Scope Chart
+= Company.emissions[]를 yearMonth + scope 기준으로 집계
+
+PCF Lifecycle Breakdown
+= Company.emissions[]를 pcfStage 기준으로 집계
+
+Company Summary
+= 회사별 totalEmissions, reportingMonthEmissions, dominantScope, topPcfStage, estimatedTax 계산
+
+Insights
+= 주요 GHG Scope, 주요 PCF 단계, 기준 월 주요 배출 계열사, 최대 탄소세 부담 계열사 계산
+```
+
+실제 서비스에서는 배출계수 버전 관리, 감사 추적, 재계산 이력 관리가 중요하므로 `RawActivity → GhgEmission` 산정 책임은 백엔드에 위치하는 것이 더 자연스럽다고 판단했습니다.
+
+---
+
+## 타입 설계
+
+과제 문서의 `Company` / `GhgEmission` 모델은 대시보드가 최종적으로 소비하는 계산 완료 데이터 모델로 해석했습니다. 반면 Excel 데이터는 원천 활동 데이터이므로 별도의 `RawActivity` 타입으로 분리했습니다.
+
+`source`는 과제 문서에서 `string`으로 정의되어 있지만, 본 MVP에서는 제공된 배출계수 표에 포함된 source만 지원합니다. 따라서 프론트엔드 도메인 타입에서는 `source`를 `CarbonSourceKey` union type으로 좁혀 사용했습니다.
+
+```ts
+type CarbonSourceKey = 'koreaElectricPower' | 'plastic1' | 'plastic2' | 'truck';
+```
+
+이를 통해 source별 단위, 배출계수, GHG Scope, PCF lifecycle stage를 타입 안전하게 매핑할 수 있도록 했습니다.
+
+실제 백엔드에서 임의의 source가 들어오는 환경이라면 API 응답 타입은 더 넓게 유지하고, 프론트엔드 경계에서 검증 및 정규화하는 레이어를 둘 수 있습니다.
+
+---
+
+## 라이브러리 선택
+
+### Next.js / TypeScript
+
+과제 요구사항에 맞춰 Next.js와 TypeScript를 사용했습니다. TypeScript는 배출원, Scope, PCF 단계, 국가 코드처럼 제한된 도메인 값을 타입으로 표현하는 데 활용했습니다.
+
+### Tailwind CSS
+
+빠른 UI 구성과 일관된 디자인 시스템 적용을 위해 Tailwind CSS를 사용했습니다. 카드, 버튼, 입력 필드, 테이블 등 반복되는 UI는 공통 컴포넌트로 분리했습니다.
+
+### TanStack Query
+
+fake API가 네트워크 지연과 실패 가능성을 포함하는 비동기 함수로 제공되므로, 서버 상태 관리와 mutation 이후 재조회 처리를 위해 TanStack Query를 사용했습니다.
+
+활동 데이터 추가 시에는 `companies` 쿼리를 invalidate하여 KPI, 차트, 회사 요약 표가 다시 계산되도록 했습니다. 산정 메모 추가 시에는 `posts` 쿼리를 invalidate하여 메모 목록이 갱신되도록 했습니다.
+
+### React Hook Form / Zod
+
+사용자 입력값 검증을 위해 React Hook Form과 Zod를 사용했습니다.
+
+활동 데이터 추가 폼에서는 회사, 활동 일자, 배출원, 사용량을 검증합니다. 배출원 선택 시 단위, 배출계수, GHG Scope, PCF 단계, 예상 배출량을 미리 보여주어 비전문가도 입력 결과를 이해할 수 있도록 했습니다.
+
+---
+
+## 폼 UX
+
+활동 데이터 추가 폼은 비전문가도 사용할 수 있도록 다음 흐름을 제공합니다.
+
+```txt
+회사/계열사 선택
+↓
+활동 일자 입력
+↓
+배출원 선택
+↓
+단위 자동 표시
+↓
+사용량 입력
+↓
+예상 배출량, 배출계수, GHG Scope, PCF 단계 미리보기
+↓
+저장
+↓
+대시보드 자동 갱신
+```
+
+잘못된 입력은 각 필드 하단의 인라인 에러 메시지로 표시합니다.
+
+---
+
+## 테스트
+
+배출량 계산의 핵심 공식은 전기, 원소재, 운송 대표 케이스로 검증했습니다. 월별 Scope 집계는 2025-01 데이터를 기준으로 수동 계산값과 비교했습니다.
+
+검증한 대표 케이스는 다음과 같습니다.
+
+```txt
+전기:
+110 × 0.456 / 1000 = 0.05016 tCO₂e
+
+원소재:
+230 × 2.3 / 1000 = 0.529 tCO₂e
+
+운송:
+41 × 3.5 / 1000 = 0.1435 tCO₂e
+
+2025-01 총 배출량:
+0.05016 + 0.529 + 0.1435 = 0.72266 tCO₂e
+```
+
+나머지 대시보드 데이터는 검증된 `GhgEmission`을 월, Scope, PCF 단계, 회사 기준으로 집계하는 파생 로직입니다.
+
+---
+
+## AI 사용 방식
+
+낯선 탄소 회계 도메인을 빠르게 이해하기 위해 AI를 보조 도구로 활용했습니다.
+
+AI는 다음 작업에 활용했습니다.
+
+- 제공된 타입과 Excel 데이터의 의미를 해석하는 데 참고했습니다.
+- 탄소 배출 데이터가 어떤 의사결정에 활용되는지 탐색했습니다.
+- GHG Scope와 PCF 개념을 UI와 타입에 반영하는 방향을 검토했습니다.
+- 반복적인 집계 유틸과 UI 초안을 작성하는 데 보조적으로 활용했습니다.
+
+다만 최종 데이터 모델 해석, 계산 기준, 대시보드 구성, fake API와 프론트엔드의 책임 경계, 주요 계산 검증은 직접 판단하고 정리했습니다.
+
+코드 생성 과정에서도 AI CLI에 전체 구현을 맡기기보다, 기존 코드와 요구사항을 기준으로 컴포넌트 단위로 검토하며 반영했습니다. 초기 코드베이스가 없는 상황에서 AI가 의도와 다른 구조를 생성할 가능성이 있었기 때문에, 보조 도구로 제한적으로 사용했습니다.
+
+---
+
+## 시간 배분 및 우선순위
+
+구현 시간은 약 14시간 가량이며, 가장 오래 걸린 부분은 도메인 및 과제 문서 이해, 나아가 어떤 데이터를 보여줄지 결정하는 과정이었습니다.
+
+따라서 이번 과제에서는 구현 기능 수보다 요구사항 해석과 도메인 모델링의 정확도를 우선했습니다.
+
+우선순위는 다음과 같이 두었습니다.
+
+1. 과제 요구사항과 도메인 핵심 파악
+2. Excel 원천 활동 데이터와 과제 제공 타입의 관계 정의
+3. GHG Scope / PCF lifecycle 개념을 타입과 UI에 반영
+4. 배출량 계산 로직과 대표 케이스 검증
+5. 대시보드 KPI, 차트, 회사 요약 표, 인사이트 구현
+6. 활동 데이터 추가 및 산정 메모 입력 폼 구현
+7. UI 정리와 README 문서화
+
+---
+
+## 구현하지 못한 부분 및 향후 개선점
+
+- 회사/계열사 필터를 통한 개별 회사 분석
+- Excel 파일 업로드 및 원천 활동 데이터 자동 변환
+- 배출계수 DB 테이블 분리 및 버전 이력 추적
+- 사용자 권한별 접근 제어
+- optimistic update 적용
+- 더 세분화된 에러 메시지와 toast 알림
+- 수치 포맷터 및 단위 상수 추가 정리
+- 일부 도메인 집계 로직의 추가 리팩토링
